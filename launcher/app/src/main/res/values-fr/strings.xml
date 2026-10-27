@@ -91,4 +91,20 @@
         <item quantity="other">%1$d applications</item>
     </plurals>
     <string name="greeting_with_name">%1$s, %2$s</string>
+    <string name="home_look_state">Fond de l\'accueil : %1$s</string>
+    <string name="home_look_landscapes">Paysages</string>
+    <string name="home_look_glow">Halos de lumière</string>
+    <string name="rotation_state">Changement de paysage : %1$s</string>
+    <string name="rotation_minutes">toutes les %1$d min</string>
+    <string name="rotation_hours">toutes les %1$d h</string>
+    <string name="rotation_day">une fois par jour</string>
+    <string name="add_wallpapers_label">Ajouter des fonds d\'écran</string>
+    <string name="add_wallpapers_help">Mettez vos images dans le dossier wallpapers/ d\'un thème et envoyez-le depuis un ordinateur avec tools/theme.ps1 (ou theme.sh). Le README l\'explique dans « Your own wallpapers ».</string>
+    <string name="wallpaper_label">Image fixe</string>
+    <string name="wallpaper_state">Image fixe : %1$s</string>
+    <string name="wallpaper_none">Aucune</string>
+    <string name="wallpaper_applied">Fond d\'écran changé</string>
+    <string name="wallpaper_theme_default">Toutes, en rotation</string>
+    <string name="rotation_hour">toutes les heures</string>
+    <string name="rows_below_dock_label">Rangées sous le dock</string>
 </resources>

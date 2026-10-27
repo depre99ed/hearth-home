@@ -89,9 +89,25 @@
         </LinearLayout>
 
         <TextView
-            android:id="@+id/wallpaperChoice"
+            android:id="@+id/homeLookChoice"
             style="@style/SettingsRow"
             android:layout_marginTop="28dp" />
+
+        <TextView
+            android:id="@+id/rotationChoice"
+            style="@style/SettingsRow"
+            android:layout_marginTop="12dp" />
+
+        <TextView
+            android:id="@+id/wallpaperChoice"
+            style="@style/SettingsRow"
+            android:layout_marginTop="12dp" />
+
+        <TextView
+            android:id="@+id/addWallpapersChoice"
+            style="@style/SettingsRow"
+            android:layout_marginTop="12dp"
+            android:text="@string/add_wallpapers_label" />
 
         <TextView
             android:id="@+id/animationsChoice"

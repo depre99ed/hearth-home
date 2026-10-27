@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- App switcher (RecentsActivity), opened by Home pressed twice. -->
+<resources>
+    <string name="recents_title">Open apps</string>
+    <plurals name="recents_count">
+        <item quantity="one">%d APP OPEN</item>
+        <item quantity="other">%d APPS OPEN</item>
+    </plurals>
+    <string name="recents_empty">No app is open</string>
+    <string name="recents_empty_hint">APPS SHOW HERE WHILE THEY ARE OPEN</string>
+    <string name="recents_close_all">Close all</string>
+    <string name="recents_hint_pick">Choose</string>
+    <string name="recents_hint_open">Open</string>
+    <string name="recents_hint_close">Close</string>
+    <string name="recents_hint_close_all">Close all</string>
+    <string name="recents_kept">Android keeps %1$s open (it is playing or working in the background)</string>
+    <string name="recents_no_permission">THE LAUNCHER CANNOT SEE OPEN APPS (DUMP NOT GRANTED)</string>
+    <string name="recents_closing">Closing %1$s…</string>
+    <string name="recents_closing_n">Closing apps… %1$d of %2$d</string>
+    <string name="recents_close_failed">Could not close %1$s</string>
+</resources>

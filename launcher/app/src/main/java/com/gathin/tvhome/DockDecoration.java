@@ -34,6 +34,8 @@ public class DockDecoration extends RecyclerView.ItemDecoration {
     private final boolean singleRow;
     /** dock_band_all: in a single row, the band runs behind every app instead of the dock apps only. */
     private final boolean bandAll;
+    /** Home's opening (HomeAwakening): the band stays where the tiles will land while they rise into it. */
+    static boolean holdBand;
 
     /**
      * @param translucent the cinematic shelf's band: the artwork and the glow show through it.
@@ -98,7 +100,7 @@ public class DockDecoration extends RecyclerView.ItemDecoration {
             View card = vh instanceof AppAdapter.Holder ? ((AppAdapter.Holder) vh).card : child.findViewById(R.id.card);
             if (card == null) continue;
             float l = child.getLeft() + card.getLeft();
-            float t = child.getTop() + card.getTop() + child.getTranslationY();
+            float t = child.getTop() + card.getTop() + (holdBand ? 0f : child.getTranslationY());
             float r = l + card.getWidth();
             float b = t + card.getHeight();
             cardWidth = card.getWidth();

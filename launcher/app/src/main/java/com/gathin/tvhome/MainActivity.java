@@ -61,6 +61,7 @@ import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
 import android.view.Window;
 import android.view.animation.AnimationUtils;
+import android.view.animation.DecelerateInterpolator;
 import android.view.animation.LayoutAnimationController;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
@@ -99,6 +100,10 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
     private static final int LAUNCHER_SETTINGS_REQUEST = 42;
     /** Sent by QuickSettingsActivity: open Launcher settings from here so Home rebuilds when they close. */
     static final String ACTION_LAUNCHER_SETTINGS = "com.gathin.tvhome.action.LAUNCHER_SETTINGS";
+    /** Sent by RemoteKeys for the "library" action word (the remote's Apps button): open the App library on Home. */
+    static final String ACTION_OPEN_LIBRARY = "com.gathin.tvhome.action.OPEN_LIBRARY";
+    /** The app switcher (RecentsActivity), for a remote button mapped to "switcher" and for testing over ADB. */
+    static final String ACTION_OPEN_RECENTS = "com.gathin.tvhome.action.OPEN_RECENTS";
     /** The system input switcher, forwarded here by InputsRequestActivity while handle_view_inputs is on. */
     static final String ACTION_VIEW_INPUTS = "com.android.tv.action.VIEW_INPUTS";
     /** Tiles per row and dock slots (res/values/config.xml, columns). Set in onCreate. */
@@ -375,6 +380,8 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         density = getResources().getDisplayMetrics().density;
+        // Hearth Home: the bundled landscapes become the theme on a fresh install (WallpaperSeed).
+        WallpaperSeed.seed(this);
         // config.xml, overlaid by config.json from a pushed theme (see Config and tools/theme.sh).
         Config cfg = Config.load(this);
         appLibrarySelection = cfg.appLibrarySelection;
@@ -795,6 +802,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         getWindow().getDecorView().getViewTreeObserver().addOnGlobalFocusChangeListener((oldF, newF) -> {
             boolean onTile = newF != null && newF.getId() == R.id.card;
             if (!onTile) hideGlass();
+            magnifyDock(onTile ? newF : null);
         });
 
         packageFilter.addAction(Intent.ACTION_PACKAGE_ADDED);
@@ -821,7 +829,13 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
                     .build(), vpnCallback);
         }
         // Not after recreate(): the launch intent survives it and would open the settings again.
-        if (savedInstanceState == null && !openLauncherSettingsIfAsked(getIntent())) openInputsIfAsked(getIntent());
+        if (savedInstanceState == null && !openLauncherSettingsIfAsked(getIntent()) && !openLibraryIfAsked(getIntent())) openInputsIfAsked(getIntent());
+        if (savedInstanceState == null) openRecentsIfAsked(getIntent());
+        // The first Home of the process wakes up (HomeAwakening); later returns only settle in (onStart).
+        if (animations && !reducedMotion) {
+            HomeAwakening.wake(findViewById(R.id.root), findViewById(R.id.sky), findViewById(R.id.leftBlock), greeting,
+                    findViewById(R.id.topButtons), grid, findViewById(R.id.glass), findViewById(R.id.hero));
+        }
     }
 
     /**
@@ -869,6 +883,28 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         return true;
     }
 
+    /** The remote's Apps button (RemoteKeys "library"): open the App library once Home is laid out. */
+    private boolean openRecentsIfAsked(Intent intent) {
+        if (intent == null || !ACTION_OPEN_RECENTS.equals(intent.getAction())) return false;
+        setIntent(new Intent(Intent.ACTION_MAIN));
+        startActivity(new Intent(this, RecentsActivity.class));
+        return true;
+    }
+
+    private boolean openLibraryIfAsked(Intent intent) {
+        if (intent == null || !ACTION_OPEN_LIBRARY.equals(intent.getAction())) return false;
+        setIntent(new Intent(Intent.ACTION_MAIN));
+        if (!appLibraryEnabled) return true;
+        if (appLibrary != null) {
+            appLibrary.close();
+            return true;
+        }
+        grid.post(() -> {
+            if (!isFinishing()) onLibraryRequested();
+        });
+        return true;
+    }
+
     private boolean openLauncherSettingsIfAsked(Intent intent) {
         if (intent == null || !ACTION_LAUNCHER_SETTINGS.equals(intent.getAction())) return false;
         setIntent(new Intent(Intent.ACTION_MAIN));
@@ -885,6 +921,8 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
     protected void onNewIntent(Intent intent) {
         super.onNewIntent(intent);
         if (openLauncherSettingsIfAsked(intent)) return;
+        if (openLibraryIfAsked(intent)) return;
+        if (openRecentsIfAsked(intent)) return;
         if (openInputsIfAsked(intent)) return;
         if (intent == null || !intent.hasCategory(Intent.CATEGORY_HOME)) return;
         grid.scrollToPosition(0);
@@ -902,7 +940,12 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
     @Override
     protected void onStart() {
         super.onStart();
+        boolean backFromApp = stopped;
         stopped = false;
+        if (backFromApp && animations && !reducedMotion) {
+            HomeAwakening.settle(findViewById(R.id.leftBlock), findViewById(R.id.topButtons), grid,
+                    findViewById(R.id.glass), findViewById(R.id.hero));
+        }
         started = true;
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             registerReceiver(timeReceiver, timeFilter, Context.RECEIVER_NOT_EXPORTED);
@@ -1585,6 +1628,40 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         });
         openPopup = appLibrary.popup;
         appLibrary.show();
+    }
+
+    /** Neighbours of the focused dock tile grow a little, like the macOS Dock (advanced_effects only). */
+    private static final float DOCK_NEIGHBOUR_SCALE = 1.045f;
+
+    /**
+     * macOS Dock magnification: the dock tiles beside the focused one swell slightly and lift, the rest of the dock
+     * settles back. focusedCard is the newly focused tile's card, or null when focus left the tiles. The focused
+     * tile keeps its own zoom from AppAdapter; only its neighbours are touched here.
+     */
+    private void magnifyDock(View focusedCard) {
+        if (!advancedEffects || reducedMotion || !animations || !dockRow || singleRow || grid == null) return;
+        int focusedPos = RecyclerView.NO_POSITION;
+        if (focusedCard != null) {
+            RecyclerView.ViewHolder vh = grid.findContainingViewHolder(focusedCard);
+            if (vh != null) focusedPos = vh.getBindingAdapterPosition();
+        }
+        boolean inDock = focusedPos != RecyclerView.NO_POSITION && focusedPos < COLUMNS;
+        for (int p = 0; p < COLUMNS; p++) {
+            if (p == focusedPos) continue;
+            RecyclerView.ViewHolder holder = grid.findViewHolderForAdapterPosition(p);
+            if (holder == null) continue;
+            View card = holder.itemView.findViewById(R.id.card);
+            if (card == null || card.isFocused()) continue;
+            boolean neighbour = inDock && Math.abs(p - focusedPos) == 1;
+            float scale = neighbour ? DOCK_NEIGHBOUR_SCALE : 1f;
+            float lift = neighbour ? -2f * density : 0f;
+            if (card.getScaleX() == scale && card.getTranslationY() == lift) continue;
+            card.animate().scaleX(scale).scaleY(scale)
+                    .translationY(lift)
+                    .setDuration(neighbour ? 260 : 200)
+                    .setInterpolator(new DecelerateInterpolator(2f))
+                    .start();
+        }
     }
 
     @Override

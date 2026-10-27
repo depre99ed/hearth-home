@@ -184,7 +184,7 @@ final class RemoteKeys {
     static boolean isAction(String target) {
         switch (target) {
             case "back": case "home": case "recents": case "mute": case "sleep":
-            case "screensaver": case "settings": case "wifi":
+            case "screensaver": case "settings": case "wifi": case "library": case "switcher":
                 return true;
             default:
                 return false;
@@ -219,6 +219,14 @@ final class RemoteKeys {
                 break;
             case "wifi":
                 start(ctx, SystemSettings.intent(ctx, Settings.ACTION_WIFI_SETTINGS));
+                break;
+            case "switcher":
+                // The app switcher, as Home pressed twice opens it (home_double_tap).
+                start(ctx, new Intent(ctx, RecentsActivity.class));
+                break;
+            case "library":
+                // The App library on Home (app_library), for a remote's Apps button the stock launcher used to answer.
+                start(ctx, new Intent(ctx, MainActivity.class).setAction(MainActivity.ACTION_OPEN_LIBRARY));
                 break;
             default:
                 break;   // "sleep" below Android 9: consumed, nothing to do

@@ -31,6 +31,8 @@ public class InputKeyService extends AccessibilityService {
     private boolean consumeVolumeKeys;
     /** Stops key filtering while a game controller is connected; null unless gamepad_passthrough and key_filter. */
     private GamepadPassthrough gamepads;
+    /** home_double_tap: Home twice opens the app switcher (RecentsActivity); null when off. */
+    private HomeDoubleTap homeTap;
 
     @Override
     protected void onServiceConnected() {
@@ -41,6 +43,8 @@ public class InputKeyService extends AccessibilityService {
         repairRecord = config.restoreKeyServices;
         if (repairRecord) ServiceRepair.connected(this, getClass());
         inputKeycodes = config.inputKeycodes;
+        homeTap = getResources().getBoolean(R.bool.home_double_tap) ? new HomeDoubleTap() : null;
+        if (homeTap != null) AppCloser.attach(this);   // the switcher closes apps through this service
         consumeVolumeKeys = config.consumeVolumeKeys;
         appKeys = RemoteKeys.parseAppKeys(config.appKeys);
         appScancodes = RemoteKeys.parseAppScancodes(config.appKeys);
@@ -66,6 +70,8 @@ public class InputKeyService extends AccessibilityService {
         // A scancode entry is more specific than any keycode, so it goes first.
         if (RemoteKeys.handle(this, event, appScancodes.get(event.getScanCode()),
                 holdAppScancodes.get(event.getScanCode()))) return true;
+        // After the scancode entries, so a second Home button (Xiaomi's) can be given its own action there.
+        if (homeTap != null && event.getKeyCode() == KeyEvent.KEYCODE_HOME) return onHome(event);
         if (RemoteKeys.handle(this, event, appKeys.get(event.getKeyCode()),
                 holdAppKeys.get(event.getKeyCode()))) return true;
         if (!isInputKey(event.getKeyCode())) return false;
@@ -78,6 +84,24 @@ public class InputKeyService extends AccessibilityService {
         return true;
     }
 
+    private boolean onHome(KeyEvent event) {
+        // With the switcher on screen Home only leaves it: a quick second press must not open it again.
+        if (RecentsActivity.showing) return false;
+        boolean canceled = (event.getFlags() & KeyEvent.FLAG_CANCELED) != 0;
+        HomeDoubleTap.Result r = homeTap.onKey(event.getAction(), event.getEventTime(), canceled);
+        if (r == HomeDoubleTap.Result.PASS && event.getAction() == KeyEvent.ACTION_DOWN && event.getRepeatCount() == 0) {
+            Thumbnails.capture(this);   // the app being left, for its card in the switcher
+        }
+        if (r == HomeDoubleTap.Result.OPEN) {
+            try {
+                startActivity(new Intent(this, RecentsActivity.class).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK
+                        | Intent.FLAG_ACTIVITY_NO_ANIMATION));
+            } catch (ActivityNotFoundException ignored) {
+            }
+        }
+        return r != HomeDoubleTap.Result.PASS;
+    }
+
     /** Unbound by Android: the user turned the helper off, so Home doesn't put it back (ServiceRepair). */
     @Override
     public boolean onUnbind(Intent intent) {
@@ -87,6 +111,7 @@ public class InputKeyService extends AccessibilityService {
 
     @Override
     public void onDestroy() {
+        AppCloser.detach(this);
         if (gamepads != null) gamepads.stop();
         if (consumeVolumeKeys) VolumeKeys.stop();
         super.onDestroy();

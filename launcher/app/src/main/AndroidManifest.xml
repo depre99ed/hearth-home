@@ -21,6 +21,21 @@
     <!-- YaOS (Yandex TV OS): HDMI, AV and the tuner all play in com.yandex.tv.live, whose activities require
          this permission (protection level normal, so it is granted at install). Ignored on other TVs. -->
     <uses-permission android:name="yandex.tv.permission.ACCESS_TV_SOURCE" />
+    <!-- Settings page (settings_hub): paired Bluetooth devices, and the screensaver delay and interface sounds
+         (Settings.System, WRITE_SETTINGS granted with appops by the install). -->
+    <uses-permission android:name="android.permission.BLUETOOTH" android:maxSdkVersion="30" />
+    <!-- Settings page, Bluetooth: connect, disconnect, pair, forget and search (normal permission, Android 11). -->
+    <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" android:maxSdkVersion="30" />
+    <!-- App switcher (RecentsActivity, home_double_tap): reads which apps are open from dumpsys (DUMP with pm grant, and
+         PACKAGE_USAGE_STATS with appops: Android 11 wants both), brings one back (REORDER_TASKS) and closes one (KILL_BACKGROUND_PROCESSES). -->
+    <uses-permission android:name="android.permission.DUMP"
+        tools:ignore="ProtectedPermissions" />
+    <uses-permission android:name="android.permission.PACKAGE_USAGE_STATS"
+        tools:ignore="ProtectedPermissions" />
+    <uses-permission android:name="android.permission.REORDER_TASKS" />
+    <uses-permission android:name="android.permission.KILL_BACKGROUND_PROCESSES" />
+    <uses-permission android:name="android.permission.WRITE_SETTINGS"
+        tools:ignore="ProtectedPermissions" />
 
     <!-- Android 11+ package visibility: lets the launcher list the TV apps it shows as tiles, and the
          apps that declare a module card (docs/specs/card.md). -->
@@ -65,6 +80,35 @@
         <package android:name="com.xiaomi.mitv.settings" />
         <package android:name="com.tcl.settings" />
         <package android:name="com.amazon.tv.launcher" />
+        <!-- Settings page (settings_hub): installed screensavers, the TV settings screens it opens, and the tracker
+             packages whose enabled state its Privacy category counts. -->
+        <intent>
+            <action android:name="android.service.dreams.DreamService" />
+        </intent>
+        <package android:name="com.android.tv.settings" />
+        <!-- The TV settings slices the Settings page shows (picture, sound, HDMI-CEC), from the vendor settings app. -->
+        <package android:name="com.droidlogic.googletv.settings" />
+        <provider android:authorities="com.google.android.tv.settings.hdr.sliceprovider" />
+        <provider android:authorities="com.google.android.tv.settings.advancedsound.sliceprovider" />
+        <provider android:authorities="com.google.android.tv.settings.displaysound.hdmi.sliceprovider" />
+        <provider android:authorities="com.google.android.tv.settings.powerbehavior.sliceprovider" />
+        <package android:name="com.google.android.gms" />
+        <package android:name="com.neilturner.aerialviews" />
+        <package android:name="com.android.systemui" />
+        <package android:name="com.miui.tv.analytics" />
+        <package android:name="com.xiaomi.statistic" />
+        <package android:name="mitv.service" />
+        <package android:name="com.xiaomi.tvqs.overseas" />
+        <package android:name="com.xiaomi.mitv.updateservice" />
+        <package android:name="com.google.android.partnersetup" />
+        <package android:name="com.google.android.feedback" />
+        <package android:name="com.mitv.tvhome.oemtab" />
+        <package android:name="com.mitv.tvhome.michannel" />
+        <package android:name="com.mitv.tvhome.mitvplus" />
+        <package android:name="com.mitv.tvhome.atv" />
+        <package android:name="com.xm.webcontent" />
+        <package android:name="android.autoinstalls.config.xioami.mibox3" />
+        <package android:name="com.google.android.apps.tv.dreamx" />
         <!-- Coocaa OS sources for the Inputs menu (coocaa_sources); see CoocaaSources. -->
         <provider android:authorities="com.skyworth.tv.provider" />
         <provider android:authorities="com.skyworth.tv.sdk.provider" />
@@ -124,6 +168,25 @@
         <!-- Remote Settings button panel (settings_key_panel); own task so the app behind stays put.
              No screenOrientation: a translucent activity may not request one on Android 8.0 (API 26),
              which throws IllegalStateException in onCreate (#1122); a TV is landscape anyway. -->
+        <!-- The launcher's own Settings page (config.xml settings_hub), opened by the Settings pill and button. -->
+        <activity
+            android:name=".SettingsHubActivity"
+            android:exported="false"
+            android:excludeFromRecents="true"
+            android:screenOrientation="landscape"
+            android:configChanges="orientation|screenSize|keyboard|keyboardHidden|uiMode" />
+
+        <!-- The app switcher: Home pressed twice (home_double_tap, InputKeyService). -->
+        <activity
+            android:name=".RecentsActivity"
+            android:exported="false"
+            android:taskAffinity=""
+            android:launchMode="singleTask"
+            android:excludeFromRecents="true"
+            android:noHistory="true"
+            android:screenOrientation="landscape"
+            android:configChanges="orientation|screenSize|keyboard|keyboardHidden|uiMode"
+            android:theme="@android:style/Theme.Translucent.NoTitleBar.Fullscreen" />
         <activity
             android:name=".QuickSettingsActivity"
             android:exported="false"

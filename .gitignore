@@ -19,3 +19,6 @@ traces/
 *.aab
 launcher/hs_err_pid*.log
 launcher/replay_pid*.log
+
+# Signed release APKs (tools/hearth/build-release)
+/out/

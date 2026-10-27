@@ -149,4 +149,14 @@
     <!-- Cinematic top shelf (cinematic_home): the line under the focused dock app's name; %1$s is when it was
          last opened, e.g. "5 minutes ago" or "yesterday, 9:40 pm". -->
     <string name="last_opened">Last opened %1$s</string>
+    <string name="home_look_state">Home background: %1$s</string>
+    <string name="home_look_landscapes">Pictures</string>
+    <string name="home_look_glow">Light halos</string>
+    <string name="rotation_state">Next picture: %1$s</string>
+    <string name="rotation_minutes">every %1$d min</string>
+    <string name="rotation_hours">every %1$d h</string>
+    <string name="rotation_day">once a day</string>
+    <string name="rotation_hour">every hour</string>
+    <string name="add_wallpapers_label">Add pictures</string>
+    <string name="add_wallpapers_help">Put your pictures in the wallpapers/ folder of a theme and push it from a computer with tools/theme.ps1 (or theme.sh). The README explains it under \"Your own wallpapers\".</string>
 </resources>

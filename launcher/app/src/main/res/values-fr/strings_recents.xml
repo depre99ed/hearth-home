@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="recents_title">Applis ouvertes</string>
+    <plurals name="recents_count">
+        <item quantity="one">%d APPLI OUVERTE</item>
+        <item quantity="many">%d APPLIS OUVERTES</item>
+        <item quantity="other">%d APPLIS OUVERTES</item>
+    </plurals>
+    <string name="recents_empty">Aucune appli ouverte</string>
+    <string name="recents_empty_hint">LES APPLIS APPARAISSENT ICI TANT QU’ELLES SONT OUVERTES</string>
+    <string name="recents_close_all">Tout fermer</string>
+    <string name="recents_hint_pick">Choisir</string>
+    <string name="recents_hint_open">Ouvrir</string>
+    <string name="recents_hint_close">Fermer</string>
+    <string name="recents_hint_close_all">Tout fermer</string>
+    <string name="recents_kept">Android garde %1$s ouverte (lecture ou tâche en arrière-plan)</string>
+    <string name="recents_no_permission">LE LAUNCHER NE PEUT PAS VOIR LES APPLIS OUVERTES (DUMP NON ACCORDÉ)</string>
+    <string name="recents_closing">Fermeture de %1$s…</string>
+    <string name="recents_closing_n">Fermeture des applis… %1$d sur %2$d</string>
+    <string name="recents_close_failed">Impossible de fermer %1$s</string>
+</resources>

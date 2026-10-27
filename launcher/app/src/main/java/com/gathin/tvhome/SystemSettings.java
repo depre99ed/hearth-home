@@ -14,6 +14,16 @@ final class SystemSettings {
     private SystemSettings() {}
 
     static Intent intent(Context context, String action) {
+        // settings_hub: the launcher's own Settings page answers the general Settings entry; the TV's settings stay one
+        // row away inside it (stock()).
+        if (Settings.ACTION_SETTINGS.equals(action) && context.getResources().getBoolean(R.bool.settings_hub)) {
+            return new Intent(context, SettingsHubActivity.class);
+        }
+        return stock(context, action);
+    }
+
+    /** The TV's own settings screen for action, never the launcher's Settings page. */
+    static Intent stock(Context context, String action) {
         PackageManager pm = context.getPackageManager();
         Intent standard = new Intent(action);
         ResolveInfo resolved = pm.resolveActivity(standard, PackageManager.MATCH_DEFAULT_ONLY);

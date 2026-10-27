@@ -1,9 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- Keys only: no accessibilityEventTypes (0), so the system never calls into the launcher for
      accessibility events, which both services ignore. Key filtering depends only on
-     flagRequestFilterKeyEvents and canRequestFilterKeyEvents, not on the event types. -->
+     flagRequestFilterKeyEvents and canRequestFilterKeyEvents, not on the event types.
+     canTakeScreenshot and canRetrieveWindowContent serve the app switcher (home_double_tap): the picture of
+     an app when Home leaves it (Thumbnails), and the TV settings' Force stop button (AppCloser). -->
 <accessibility-service xmlns:android="http://schemas.android.com/apk/res/android"
     android:accessibilityFeedbackType="feedbackGeneric"
     android:accessibilityFlags="flagRequestFilterKeyEvents"
     android:canRequestFilterKeyEvents="true"
+    android:canTakeScreenshot="true"
+    android:canRetrieveWindowContent="true"
     android:description="@string/input_key_service_description" />

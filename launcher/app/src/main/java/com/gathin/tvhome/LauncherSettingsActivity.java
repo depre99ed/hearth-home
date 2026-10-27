@@ -28,6 +28,8 @@ public final class LauncherSettingsActivity extends Activity {
     private static final int[] DOCK_OPACITIES = {100, 70, 50, 30};
     private final TextView[] dockChoices = new TextView[DOCK_OPACITIES.length];
     private TextView wallpaperChoice;
+    private TextView homeLookChoice, rotationChoice;
+    private static final int[] ROTATIONS = {15, 30, 60, 180, 1440};
     private TextView animationsChoice;
     private TextView advancedChoice;
     private TextView followThemeChoice;
@@ -101,6 +103,30 @@ public final class LauncherSettingsActivity extends Activity {
         }
         wallpaperChoice = findViewById(R.id.wallpaperChoice);
         wallpaperChoice.setOnClickListener(v -> showWallpaperPicker());
+        homeLookChoice = findViewById(R.id.homeLookChoice);
+        homeLookChoice.setOnClickListener(v -> {
+            // Pictures or halos; picking pictures also drops a single-picture choice so the collection rotates.
+            boolean glow = !"glow".equals(choices.getString(Config.HOME_LOOK_KEY, null));
+            SharedPreferences.Editor e = choices.edit().putString(Config.HOME_LOOK_KEY, glow ? "glow" : "landscapes");
+            if (!glow) e.remove(Config.WALLPAPER_CHOICE_KEY);
+            e.apply();
+            changed();
+            refresh();
+        });
+        rotationChoice = findViewById(R.id.rotationChoice);
+        rotationChoice.setOnClickListener(v -> {
+            int current = choices.getInt(Config.ROTATION_KEY, 60);
+            int next = ROTATIONS[0];
+            for (int i = 0; i < ROTATIONS.length; i++) if (ROTATIONS[i] == current) next = ROTATIONS[(i + 1) % ROTATIONS.length];
+            choices.edit().putInt(Config.ROTATION_KEY, next).apply();
+            changed();
+            refresh();
+        });
+        findViewById(R.id.addWallpapersChoice).setOnClickListener(v -> new AlertDialog.Builder(this)
+                .setTitle(R.string.add_wallpapers_label)
+                .setMessage(R.string.add_wallpapers_help)
+                .setPositiveButton(android.R.string.ok, null)
+                .show());
         animationsChoice = findViewById(R.id.animationsChoice);
         animationsChoice.setOnClickListener(v -> {
             animations = !animations;
@@ -148,7 +174,7 @@ public final class LauncherSettingsActivity extends Activity {
             open(new Intent(Settings.ACTION_HOME_SETTINGS));
         });
         findViewById(R.id.tvSettingsChoice).setOnClickListener(v ->
-                open(SystemSettings.intent(this, Settings.ACTION_SETTINGS)));
+                open(SystemSettings.stock(this, Settings.ACTION_SETTINGS)));
         refresh();
         if (config.launcherSettingsButton) reorderChoice.requestFocus();
         else columnChoices[Math.max(0, Math.min(columns - 4, 3))].requestFocus();
@@ -291,6 +317,16 @@ public final class LauncherSettingsActivity extends Activity {
                         : wallpaperCurrent != null ? wallpaperCurrent
                         : getString(R.string.wallpaper_theme_default)));
         openOnStartChoice.setText(getString(R.string.open_on_start_state, openOnStartLabel()));
+        boolean glow = "glow".equals(choices.getString(Config.HOME_LOOK_KEY, null));
+        homeLookChoice.setText(getString(R.string.home_look_state,
+                getString(glow ? R.string.home_look_glow : R.string.home_look_landscapes)));
+        int minutes = choices.getInt(Config.ROTATION_KEY, 60);
+        rotationChoice.setText(getString(R.string.rotation_state, minutes >= 1440 ? getString(R.string.rotation_day)
+                : minutes == 60 ? getString(R.string.rotation_hour)
+                : minutes >= 60 ? getString(R.string.rotation_hours, minutes / 60)
+                : getString(R.string.rotation_minutes, minutes)));
+        rotationChoice.setEnabled(!glow);
+        rotationChoice.setAlpha(glow ? 0.5f : 1f);
         followThemeChoice.setSelected(!hasOnTvChoices());
     }
 

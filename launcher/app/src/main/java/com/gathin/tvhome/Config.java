@@ -43,6 +43,11 @@ final class Config {
     static final String ROWS_BELOW_DOCK_KEY = "rows_below_dock";
     static final String WALLPAPER_CHOICE_KEY = "wallpaper_choice";
     static final String DOCK_OPACITY_KEY = "dock_opacity";
+    /** On-TV pick of Home's background: "landscapes" (the theme's collection) or "glow" (no picture, the glow in
+     *  the focused app's colour). Unset: the theme decides. */
+    static final String HOME_LOOK_KEY = "home_look";
+    /** On-TV pick of how often the collection changes, in minutes; unset or 0: the theme's interval. */
+    static final String ROTATION_KEY = "wallpaper_rotation";
     /**
      * Counts the changes made in Launcher settings. Home remembers the count it was built with and rebuilds on
      * resume when it differs, however the settings were left (see MainActivity#onResume).
@@ -595,6 +600,8 @@ final class Config {
         boolean wallpaperEnabled = json == null || bool(json, "wallpaper", true);
         if (!wallpaperEnabled) wallpaper = null;
         int rotationMinutes = json == null ? 0 : integer(json, "wallpaper_rotation_minutes", 0, 0, 1440);
+        int chosenRotation = choices.getInt(ROTATION_KEY, 0);
+        if (rotationMinutes > 0 && chosenRotation > 0) rotationMinutes = Math.min(1440, chosenRotation);
         int wallpaperDim = json == null ? 0 : integer(json, "wallpaper_dim", 0, 0, 90);
         int dockOpacity = json == null ? 100 : integer(json, "dock_opacity", 100, 30, 100);
         dockOpacity = chosenDockOpacity(choices.getInt(DOCK_OPACITY_KEY, -1), dockOpacity);
@@ -617,6 +624,13 @@ final class Config {
             wallpapers.addAll(chosen);
             wallpaper = chosen.isEmpty() ? null : chosen.get(0);
             wallpaperEnabled = !chosen.isEmpty();
+        }
+        if ("glow".equals(choices.getString(HOME_LOOK_KEY, null))) {
+            // Light halos instead of pictures: no wallpaper, the glow in the focused app's colour.
+            wallpapers.clear();
+            wallpaper = null;
+            wallpaperEnabled = false;
+            ambientGlow = true;
         }
         // A festive skin comes only from a theme; config.xml has no festival.
         Festival festival = json == null ? Festival.NONE : Festival.parse(string(json, "festival", ""),
@@ -679,11 +693,11 @@ final class Config {
             SharedPreferences.Editor editor = choices.edit();
             if (!"absent".equals(token)) editor.remove("columns").remove("animations")
                     .remove("advanced_effects").remove(ROWS_BELOW_DOCK_KEY).remove(WALLPAPER_CHOICE_KEY)
-                    .remove(DOCK_OPACITY_KEY);
+                    .remove(DOCK_OPACITY_KEY).remove(HOME_LOOK_KEY).remove(ROTATION_KEY);
             editor.putString(THEME_SIGNATURE_KEY, signature).commit();
         } else if (!seen.equals(signature)) {
             choices.edit().remove("columns").remove("animations").remove("advanced_effects")
-                    .remove(ROWS_BELOW_DOCK_KEY).remove(WALLPAPER_CHOICE_KEY).remove(DOCK_OPACITY_KEY)
+                    .remove(ROWS_BELOW_DOCK_KEY).remove(WALLPAPER_CHOICE_KEY).remove(DOCK_OPACITY_KEY).remove(HOME_LOOK_KEY).remove(ROTATION_KEY)
                     .putString(THEME_SIGNATURE_KEY, signature).commit();
         }
     }
